@@ -6,7 +6,34 @@
         xmlns:local="clr-namespace:MemoryGame.UI"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+   
+    <Grid Margin="10">
 
+
+        <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Horizontal">
+                <Button Command="{Binding DataContext.FlipCardCommand}"
+                        CommandParameter="{Binding}">
+                    <Grid Height="100" Width="100" >
+                        <Border x:Name="Back" Background="Blue">
+                            <TextBlock Text="?" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"></TextBlock>
+                            
+                        </Border>
+                        <Border x:Name="Front" Background="Red">
+                            <TextBlock Text="{Binding DataContext}" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                
+                            </TextBlock>
+                            
+                        </Border>
+                    </Grid>
+                </Button>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal"></StackPanel>
+            <StackPanel Orientation="Horizontal"></StackPanel>
+            <StackPanel Orientation="Horizontal"></StackPanel>
+            
+            
+        </StackPanel>
+        
     </Grid>
 </Window>
