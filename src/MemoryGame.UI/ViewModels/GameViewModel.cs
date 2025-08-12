@@ -1,83 +1,90 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Threading;
 using MemoryGame.Application.Abstractions;
-using MemoryGame.UI.Commands;
+using MemoryGame.UI.Common;
 
 namespace MemoryGame.UI.ViewModels;
 
 public class GameViewModel : INotifyPropertyChanged
 {
-    private readonly IGameService _gameService;
-    private bool _busy;
+    private readonly IGameService _game;
+    private readonly DispatcherTimer _timer;
 
-    public ObservableCollection<CardViewModel> Cards { get; } = new();
-    public string Username { get; set; } = "Player";
-    public int Moves => _gameService.Stats.MoveCount;
-    public TimeSpan TimeElapsed => _gameService.Stats.TimeElapsed;
-
-    public RelayCommand StartGameCommand { get; }
-    public RelayCommand FlipBlockedCommand { get; } // no-op when busy resolving
+    private string _username = "Player";
+    private TimeSpan _elapsed = TimeSpan.Zero;
+    private bool _isRunning;
 
     public GameViewModel(IGameService gameService)
     {
-        _gameService = gameService;
-        _gameService.StateChanged += (_, __) => RefreshFromService();
+        _game = gameService;
 
-        StartGameCommand = new RelayCommand(StartGame);
-        FlipBlockedCommand = new RelayCommand(() => { });
+        Cards = new ObservableCollection<CardViewModel>();
+        StartCommand = new RelayCommand(_ => _ = StartAsync());
+        FlipCommand = new RelayCommand(p => _ = FlipAsync((int)p!), p => _isRunning);
 
-        StartGame(); // optional auto-start
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        _timer.Tick += (_, __) =>
+        {
+            if (_isRunning) Elapsed = _game.Stats.Elapsed;
+        };
     }
 
-    private void StartGame()
+    public ObservableCollection<CardViewModel> Cards { get; }
+    public RelayCommand StartCommand { get; }
+    public RelayCommand FlipCommand { get; }
+
+    public string Username
     {
-        _gameService.StartNewGame(Username);
-        Cards.Clear();
-        foreach (var c in _gameService.Cards)
-        {
-            var vm = new CardViewModel
-            {
-                Id = c.Id,
-                Symbol = c.Symbol
-            };
-            vm.FlipCommand = new RelayCommand(async () => await Flip(vm));
-            Cards.Add(vm);
-        }
-        OnPropertyChanged(nameof(Moves));
-        OnPropertyChanged(nameof(TimeElapsed));
-        RefreshFromService(); // sync initial state
+        get => _username;
+        set { _username = value; OnPropertyChanged(); }
     }
 
-    private async Task Flip(CardViewModel vm)
-    {
-        if (_busy) return;
-        _busy = true;
-        try
-        {
-            await _gameService.FlipCardAsync(vm.Id);
-        }
-        finally
-        {
-            _busy = false;
-        }
-    }
+    public int Moves => _game.Stats.Moves;
 
-    private void RefreshFromService()
+    public TimeSpan Elapsed
     {
-        // update card VMs
-        foreach (var vm in Cards)
-        {
-            var card = _gameService.Cards[vm.Id];
-            vm.IsFlipped = card.IsFlipped;
-            vm.IsMatched = card.IsMatched;
-            vm.Symbol = card.Symbol;
-        }
-        OnPropertyChanged(nameof(Moves));
-        OnPropertyChanged(nameof(TimeElapsed));
+        get => _elapsed;
+        private set { _elapsed = value; OnPropertyChanged(); }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    private async Task StartAsync()
+    {
+        await _game.StartNewGameAsync(Username);
+        Cards.Clear();
+        foreach (var c in _game.Cards)
+            Cards.Add(new CardViewModel(c));
+
+        _isRunning = true;
+        _timer.Start();
+        OnPropertyChanged(nameof(Moves));
+        Elapsed = TimeSpan.Zero;
+    }
+
+    private async Task FlipAsync(int cardId)
+    {
+        await _game.FlipAsync(cardId);
+        // Push state changes to the CardViewModels and stats
+        foreach (var vm in Cards)
+        {
+            var card = _game.Cards.First(c => c.Id == vm.Id);
+            vm.IsFlipped = card.IsFlipped;
+            vm.IsMatched = card.IsMatched;
+        }
+
+        OnPropertyChanged(nameof(Moves));
+
+        if (_game.Stats.IsCompleted)
+        {
+            _isRunning = false;
+            _timer.Stop();
+            Elapsed = _game.Stats.Elapsed;
+        }
+    }
+
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
         => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }

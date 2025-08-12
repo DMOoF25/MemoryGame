@@ -1,30 +1,29 @@
 ﻿using MemoryGame.Application.Abstractions;
 using MemoryGame.Domain.Entities;
 
-namespace MemoryGame.Infrastructure.Deck;
+namespace MemoryGame.Infrastructure.Decks;
 
 public class EmojiDeckProvider : IDeckProvider
 {
-    private static readonly string[] DefaultSymbols =
+    private static readonly string[] BaseSymbols =
     {
-        "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼"
+        "🍎","🐶","🚗","⭐","🎈","🌙","⚽","🎵"
     };
 
-    public IList<Card> CreateShuffledDeck(int pairCount)
+    public List<Card> CreateShuffledDeck()
     {
-        var symbols = DefaultSymbols.Take(pairCount).ToArray();
-        var deck = new List<Card>();
-        foreach (var s in symbols)
+        var symbols = BaseSymbols.SelectMany(s => new[] { s, s }).ToList();
+        var rng = new Random();
+        symbols = symbols.OrderBy(_ => rng.Next()).ToList();
+
+        var cards = symbols.Select((sym, i) => new Card
         {
-            deck.Add(new Card { Symbol = s });
-            deck.Add(new Card { Symbol = s });
-        }
+            Id = i,
+            Symbol = sym,
+            IsFlipped = false,
+            IsMatched = false
+        }).ToList();
 
-        var rnd = new Random();
-        deck = deck.OrderBy(_ => rnd.Next()).ToList();
-        for (int i = 0; i < deck.Count; i++)
-            deck[i].Id = i;
-
-        return deck;
+        return cards;
     }
 }

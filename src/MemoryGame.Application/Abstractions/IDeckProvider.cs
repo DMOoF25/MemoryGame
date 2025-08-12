@@ -4,5 +4,6 @@ namespace MemoryGame.Application.Abstractions;
 
 public interface IDeckProvider
 {
-    IList<Card> CreateShuffledDeck(int pairCount);
+    // Returns 16 cards (8 pairs), unflipped, unmatched, shuffled.
+    List<Card> CreateShuffledDeck();
 }

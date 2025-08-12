@@ -6,63 +6,49 @@ namespace MemoryGame.Application.Services;
 public class GameService : IGameService
 {
     private readonly IDeckProvider _deckProvider;
-    private readonly IAsyncDelay _delay;
-    private readonly ITimerService _timer;
+    private readonly IStatsRepository _statsRepo;
 
-    private readonly List<Card> _cards = new();
-    private readonly GameStats _stats = new();
+    private List<Card> _cards = new();
     private Card? _first;
-    private Card? _second;
-    private bool _resolvingPair;
+    private bool _lock; // prevents flipping during evaluation
 
-    public GameService(IDeckProvider deckProvider, IAsyncDelay delay, ITimerService timer)
+    public GameService(IDeckProvider deckProvider, IStatsRepository statsRepo)
     {
         _deckProvider = deckProvider;
-        _delay = delay;
-        _timer = timer;
-        _timer.Tick += (_, elapsed) =>
-        {
-            _stats.TimeElapsed = elapsed;
-            StateChanged?.Invoke(this, EventArgs.Empty);
-        };
+        _statsRepo = statsRepo;
+        Stats = new GameStats();
     }
 
     public IReadOnlyList<Card> Cards => _cards;
-    public GameStats Stats => _stats;
-    public event EventHandler? StateChanged;
+    public GameStats Stats { get; private set; }
 
-    public void StartNewGame(string username)
+    public Task StartNewGameAsync(string username, CancellationToken ct = default)
     {
-        _timer.Stop();
-        _timer.Reset();
-
-        _cards.Clear();
-        foreach (var c in _deckProvider.CreateShuffledDeck(pairCount: 8))
-            _cards.Add(c);
-
-        _stats.Username = username;
-        _stats.MoveCount = 0;
-        _stats.TimeElapsed = TimeSpan.Zero;
-
+        _cards = _deckProvider.CreateShuffledDeck();
         _first = null;
-        _second = null;
-        _resolvingPair = false;
+        _lock = false;
 
-        _timer.Start();
-        StateChanged?.Invoke(this, EventArgs.Empty);
+        Stats = new GameStats
+        {
+            Username = username,
+            Moves = 0,
+            StartedAt = DateTimeOffset.UtcNow,
+            EndedAt = null
+        };
+        return Task.CompletedTask;
     }
 
-    public async Task FlipCardAsync(int cardId, CancellationToken ct = default)
+    public async Task FlipAsync(int cardId, CancellationToken ct = default)
     {
-        if (_resolvingPair) return;
+        if (_lock) return;
 
         var card = _cards.FirstOrDefault(c => c.Id == cardId);
-        if (card is null) return;
-        if (card.IsMatched || card.IsFlipped) return;
+        if (card is null || card.IsMatched || card.IsFlipped) return;
+
+        // Every flip counts as a move
+        Stats.Moves++;
 
         card.IsFlipped = true;
-        _stats.MoveCount++; // every flip counts
-        StateChanged?.Invoke(this, EventArgs.Empty);
 
         if (_first is null)
         {
@@ -70,37 +56,35 @@ public class GameService : IGameService
             return;
         }
 
-        _second = card;
-        _resolvingPair = true;
+        // Second flip — evaluate
+        _lock = true;
 
-        if (_first.Symbol == _second.Symbol)
+        if (_first.Symbol == card.Symbol)
         {
-            _first.IsMatched = _second.IsMatched = true;
-            _first = _second = null;
-            _resolvingPair = false;
-            StateChanged?.Invoke(this, EventArgs.Empty);
-            CheckIfGameOver();
+            _first.IsMatched = true;
+            card.IsMatched = true;
+            _first = null;
+            _lock = false;
+
+            if (_cards.All(c => c.IsMatched))
+            {
+                Stats.EndedAt = DateTimeOffset.UtcNow;
+                await _statsRepo.SaveAsync(Stats, ct);
+            }
         }
         else
         {
-            // brief delay before flipping back
-            await _delay.Delay(TimeSpan.FromMilliseconds(700), ct);
-            if (!ct.IsCancellationRequested)
+            // Brief delay so the player can see the second card
+            try
             {
-                _first.IsFlipped = false;
-                _second.IsFlipped = false;
-                _first = _second = null;
-                _resolvingPair = false;
-                StateChanged?.Invoke(this, EventArgs.Empty);
+                await Task.Delay(700, ct);
             }
-        }
-    }
+            catch (TaskCanceledException) { /* ignore */ }
 
-    private void CheckIfGameOver()
-    {
-        if (_cards.All(c => c.IsMatched))
-        {
-            _timer.Stop(); // freeze time on win
+            _first.IsFlipped = false;
+            card.IsFlipped = false;
+            _first = null;
+            _lock = false;
         }
     }
 }

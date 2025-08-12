@@ -1,24 +1,28 @@
 ﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
+using MemoryGame.Domain.Entities;
 
 namespace MemoryGame.UI.ViewModels;
 
 public class CardViewModel : INotifyPropertyChanged
 {
-    private int _id;
-    private string _symbol = "";
-    private bool _isFlipped;
-    private bool _isMatched;
+    private readonly Card _card;
+    public CardViewModel(Card card) => _card = card;
 
-    public int Id { get => _id; set { _id = value; OnPropertyChanged(); } }
-    public string Symbol { get => _symbol; set { _symbol = value; OnPropertyChanged(); } }
-    public bool IsFlipped { get => _isFlipped; set { _isFlipped = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsInteractive)); } }
-    public bool IsMatched { get => _isMatched; set { _isMatched = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsInteractive)); } }
+    public int Id => _card.Id;
+    public string Symbol => _card.Symbol;
 
-    public bool IsInteractive => !IsMatched && !IsFlipped;
+    public bool IsFlipped
+    {
+        get => _card.IsFlipped;
+        set { if (_card.IsFlipped != value) { _card.IsFlipped = value; OnPropertyChanged(); } }
+    }
 
-    public ICommand? FlipCommand { get; set; }
+    public bool IsMatched
+    {
+        get => _card.IsMatched;
+        set { if (_card.IsMatched != value) { _card.IsMatched = value; OnPropertyChanged(); } }
+    }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? name = null)
