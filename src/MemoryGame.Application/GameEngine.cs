@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using MemoryGame.Domain;
+using MemoryGame.Domain.Entities;
 
 namespace MemoryGame.Application;
 

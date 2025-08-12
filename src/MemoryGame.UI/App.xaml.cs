@@ -1,14 +1,27 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Windows;
+﻿using System.Windows;
+using MemoryGame.Infrastructure.DI;
+using MemoryGame.UI.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace MemoryGame.UI
+namespace MemoryGame.UI;
+
+public partial class App : System.Windows.Application
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
-    }
+    private ServiceProvider? _provider;
 
+    protected override void OnStartup(StartupEventArgs e)
+    {
+        base.OnStartup(e);
+
+        var services = new ServiceCollection()
+            .AddMemoryGame()
+            .AddSingleton<GameViewModel>()
+            .AddSingleton<Views.MainWindow>();
+
+        _provider = services.BuildServiceProvider();
+
+        var window = _provider.GetRequiredService<Views.MainWindow>();
+        window.DataContext = _provider.GetRequiredService<GameViewModel>();
+        window.Show();
+    }
 }

@@ -1,39 +1,79 @@
-﻿<Window x:Class="MemoryGame.UI.MainWindow"
+﻿<Window x:Class="MemoryGame.UI.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MemoryGame.UI"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-   
-    <Grid Margin="10">
-
-
-        <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <Button Command="{Binding DataContext.FlipCardCommand}"
-                        CommandParameter="{Binding}">
-                    <Grid Height="100" Width="100" >
-                        <Border x:Name="Back" Background="Blue">
-                            <TextBlock Text="?" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"></TextBlock>
-                            
-                        </Border>
-                        <Border x:Name="Front" Background="Red">
-                            <TextBlock Text="{Binding DataContext}" FontSize="50" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                
-                            </TextBlock>
-                            
-                        </Border>
-                    </Grid>
-                </Button>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal"></StackPanel>
-            <StackPanel Orientation="Horizontal"></StackPanel>
-            <StackPanel Orientation="Horizontal"></StackPanel>
-            
-            
-        </StackPanel>
+        xmlns:vm="clr-namespace:MemoryGame.UI.ViewModels"
+        xmlns:conv="clr-namespace:MemoryGame.UI.Converters"
         
-    </Grid>
+        Title="Memory Game" Height="520" Width="420" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <!-- Ensure MultiBooleanToVisibilityConverter exists in the specified namespace and is public -->
+        <conv:MultiBooleanToVisibilityConverter x:Key="AndVisibility" UseOrLogic="False"/>
+        <conv:MultiBooleanToVisibilityConverter x:Key="OrVisibility" UseOrLogic="True"/>
+        <!--<conv:BoolInverseConverter x:Key="InverseBool"/>-->
+        <Style x:Key="CardButtonStyle" TargetType="Button">
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="MinHeight" Value="80"/>
+            <Setter Property="MinWidth" Value="80"/>
+            <Setter Property="Background" Value="#FF2B2B2B"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <DockPanel Margin="12">
+        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="0,0,0,12" VerticalAlignment="Center">
+            <TextBlock Text="Username:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+            <TextBox Width="140" Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"/>
+            <Button Content="New Game" Command="{Binding StartGameCommand}" />
+            <TextBlock Text="  |  Moves: " Margin="12,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Moves}" FontWeight="Bold" VerticalAlignment="Center"/>
+            <TextBlock Text="  |  Time: " Margin="12,0,0,0" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding TimeElapsed}" VerticalAlignment="Center"/>
+        </StackPanel>
+
+        <ItemsControl ItemsSource="{Binding Cards}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Columns="4" Rows="4"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:CardViewModel}">
+                    <Button Style="{StaticResource CardButtonStyle}"
+                            Command="{Binding FlipCommand}"
+                            IsEnabled="{Binding IsInteractive}">
+                        <Grid>
+                            <!-- Face-down -->
+                            <TextBlock Text="🂠" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.Visibility>
+                                    <MultiBinding Converter="{StaticResource OrVisibility}">
+                                        <Binding Path="IsFlipped"/>
+                                        <Binding Path="IsMatched"/>
+                                    </MultiBinding>
+                                </TextBlock.Visibility>
+                            </TextBlock>
+                            <!-- Face-up -->
+                            <TextBlock Text="{Binding Symbol}" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock.Visibility>
+                                    <MultiBinding Converter="{StaticResource AndVisibility}">
+                                        <Binding Path="IsFlipped"/>
+                                        <Binding Path="IsMatched" Converter="{StaticResource InverseBool}"/>
+                                    </MultiBinding>
+                                </TextBlock.Visibility>
+                            </TextBlock>
+                        </Grid>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </DockPanel>
 </Window>
