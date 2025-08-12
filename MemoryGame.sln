@@ -1,9 +1,44 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36301.6 d17.14
+VisualStudioVersion = 17.14.36301.6
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryGame.UI", "src\MemoryGame.UI\MemoryGame.UI.csproj", "{A9C2BFC8-65EE-4BB7-9F83-22D6B483CC23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryGame.Domain", "src\MemoryGame.Domain\MemoryGame.Domain.csproj", "{A7BB8BCD-64CC-4A60-BDEC-43A9475D8D95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryGame.Application", "src\MemoryGame.Application\MemoryGame.Application.csproj", "{68937648-4C10-417A-9B35-960ACE1085ED}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MemoryGame.Infrastructure", "src\MemoryGame.Infrastructure\MemoryGame.Infrastructure.csproj", "{9D597B1A-4A23-4A1C-9BC8-F7A2E2ECBC58}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A9C2BFC8-65EE-4BB7-9F83-22D6B483CC23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A9C2BFC8-65EE-4BB7-9F83-22D6B483CC23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A9C2BFC8-65EE-4BB7-9F83-22D6B483CC23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A9C2BFC8-65EE-4BB7-9F83-22D6B483CC23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7BB8BCD-64CC-4A60-BDEC-43A9475D8D95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7BB8BCD-64CC-4A60-BDEC-43A9475D8D95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7BB8BCD-64CC-4A60-BDEC-43A9475D8D95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7BB8BCD-64CC-4A60-BDEC-43A9475D8D95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68937648-4C10-417A-9B35-960ACE1085ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68937648-4C10-417A-9B35-960ACE1085ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68937648-4C10-417A-9B35-960ACE1085ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68937648-4C10-417A-9B35-960ACE1085ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D597B1A-4A23-4A1C-9BC8-F7A2E2ECBC58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D597B1A-4A23-4A1C-9BC8-F7A2E2ECBC58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D597B1A-4A23-4A1C-9BC8-F7A2E2ECBC58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D597B1A-4A23-4A1C-9BC8-F7A2E2ECBC58}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
