@@ -10,4 +10,9 @@
     <ProjectReference Include="..\MemoryGame.Application\MemoryGame.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="EcoCore" Version="7.2.0.16815" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.8" />
+  </ItemGroup>
+
 </Project>
