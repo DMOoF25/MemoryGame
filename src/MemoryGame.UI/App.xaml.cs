@@ -17,7 +17,7 @@ public partial class App : System.Windows.Application
         IDeckProvider deck = new EmojiDeckProvider();
         var statsPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "MemoryGame", "stats.jsonl");
+            "MemoryGame", "stats.json");
         IStatsRepository statsRepo = new FileStatsRepository(statsPath);
 
         IGameService game = new GameService(deck, statsRepo);
