@@ -3,6 +3,9 @@ using MemoryGame.Domain.Entities;
 
 namespace MemoryGame.Application.Services;
 
+/// <summary>
+/// Provides the core logic for the memory game, including card management, game state, and move evaluation.
+/// </summary>
 public class GameService : IGameService
 {
     private readonly IDeckProvider _deckProvider;
@@ -12,8 +15,14 @@ public class GameService : IGameService
     private Card? _first;
     private bool _lock; // prevents flipping during evaluation
 
+    /// <inheritdoc/>
     public bool Lock { get => _lock; set => _lock = value; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GameService"/> class.
+    /// </summary>
+    /// <param name="deckProvider">The deck provider used to create shuffled decks.</param>
+    /// <param name="statsRepo">The repository used to persist game statistics.</param>
     public GameService(IDeckProvider deckProvider, IStatsRepository statsRepo)
     {
         _deckProvider = deckProvider;
@@ -21,9 +30,13 @@ public class GameService : IGameService
         Stats = new GameStats();
     }
 
+    /// <inheritdoc/>
     public IReadOnlyList<Card> Cards => _cards;
+
+    /// <inheritdoc/>
     public GameStats Stats { get; private set; }
 
+    /// <inheritdoc/>
     public Task StartNewGameAsync(string username, CancellationToken ct = default)
     {
         _cards = _deckProvider.CreateShuffledDeck();
@@ -40,6 +53,10 @@ public class GameService : IGameService
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc/>
+    /// <remarks>
+    /// If a match is found, both cards are marked as matched. If not, the method returns the IDs of the two cards to be unflipped after a delay.
+    /// </remarks>
     public async Task<(bool IsMatch, int? FirstId, int? SecondId)> FlipAsync(int cardId, CancellationToken ct = default)
     {
         if (_lock) return (false, null, null);
@@ -74,9 +91,8 @@ public class GameService : IGameService
         }
         else
         {
-            // We made a mistake here, we need to show both cards flipped for a moment so we pu the delay is inside GameViewModel instead
-            // Return the IDs of the two cards to be unflipped after delay - Wrong approach
-            // Instead, we should handle the UI update in the ViewModel after this method returns. So we return the IDs of the cards to be unflipped.
+            // We made a mistake here, we need to show both cards flipped for a moment so we put the delay inside GameViewModel instead
+            // Return the IDs of the two cards to be unflipped after delay
             var firstId = _first.Id;
             var secondId = card.Id;
             _first = null;
@@ -84,55 +100,4 @@ public class GameService : IGameService
             return (false, firstId, secondId);
         }
     }
-
-    //public async Task FlipAsync(int cardId, CancellationToken ct = default)
-    //{
-    //    if (_lock) return;
-
-    //    var card = _cards.FirstOrDefault(c => c.Id == cardId);
-    //    if (card is null || card.IsMatched ) return;
-
-    //    // Every flip counts as a move
-    //    Stats.Moves++;
-
-    //    card.IsFlipped = true;
-
-    //    if (_first is null)
-    //    {
-    //        _first = card;
-    //        return;
-    //    }
-
-    //    // Second flip — evaluate
-    //    _lock = true;
-
-    //    if (_first.Symbol == card.Symbol)
-    //    {
-    //        _first.IsMatched = true;
-    //        card.IsMatched = true;
-    //        _first = null;
-    //        _lock = false;
-
-    //        if (_cards.All(c => c.IsMatched))
-    //        {
-    //            Stats.EndedAt = DateTimeOffset.UtcNow;
-    //            await _statsRepo.SaveAsync(Stats, ct);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        // Here I need to update the UI to show both cards flipped for a moment
-    //        // Brief delay so the player can see the second card
-    //        try
-    //        {
-    //            await Task.Delay(700, ct);
-    //        }
-    //        catch (TaskCanceledException) { /* ignore */ }
-
-    //        _first.IsFlipped = false;
-    //        card.IsFlipped = false;
-    //        _first = null;
-    //        _lock = false;
-    //    }
-    //}
 }
