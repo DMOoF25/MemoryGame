@@ -15,13 +15,25 @@ public class CardViewModel : INotifyPropertyChanged
     public bool IsFlipped
     {
         get => _card.IsFlipped;
-        set { if (_card.IsFlipped != value) { _card.IsFlipped = value; OnPropertyChanged(); } }
+        set
+        {
+            // Normally, we would check if the value has changed before updating, but for this value is alreade changed by GameSer.
+            //if (_card.IsFlipped != value) {
+            _card.IsFlipped = value; OnPropertyChanged();
+            //}
+        }
     }
 
     public bool IsMatched
     {
         get => _card.IsMatched;
-        set { if (_card.IsMatched != value) { _card.IsMatched = value; OnPropertyChanged(); } }
+        set
+        {
+            // Normally, we would check if the value has changed before updating, but for this value is alreade changed by GameSer.
+            //if (_card.IsMatched != value) { 
+            _card.IsMatched = value; OnPropertyChanged();
+            //}
+        }
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

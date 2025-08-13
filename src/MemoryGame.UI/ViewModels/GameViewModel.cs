@@ -22,7 +22,10 @@ public class GameViewModel : INotifyPropertyChanged
 
         Cards = new ObservableCollection<CardViewModel>();
         StartCommand = new RelayCommand(_ => _ = StartAsync());
-        FlipCommand = new RelayCommand(p => _ = FlipAsync((int)p!), p => _isRunning);
+
+        FlipCommand = new RelayCommand(
+            p => _ = FlipAsync((int)p!),
+            p => _isRunning && Cards.Any(c => c.Id == (int)p! && !c.IsFlipped));
 
         _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _timer.Tick += (_, __) =>
@@ -66,8 +69,11 @@ public class GameViewModel : INotifyPropertyChanged
 
     private async Task FlipAsync(int cardId)
     {
-        await _game.FlipAsync(cardId);
-        // Push state changes to the CardViewModels and stats
+        //bool isMatch = false;
+        //int? firstId = null, secondId = null;
+        var (isMatch, firstId, secondId) = await _game.FlipAsync(cardId);
+
+        // Update all CardViewModels to reflect the current state
         foreach (var vm in Cards)
         {
             var card = _game.Cards.First(c => c.Id == vm.Id);
@@ -76,6 +82,19 @@ public class GameViewModel : INotifyPropertyChanged
         }
 
         OnPropertyChanged(nameof(Moves));
+
+        // If not a match, show both cards for a moment, then unflip
+        if (!isMatch && firstId.HasValue && secondId.HasValue)
+        {
+            await Task.Delay(700);
+
+            var firstVm = Cards.First(c => c.Id == firstId.Value);
+            var secondVm = Cards.First(c => c.Id == secondId.Value);
+
+            firstVm.IsFlipped = false;
+            secondVm.IsFlipped = false;
+            _game.Lock = false; // Unlock the game for the next move
+        }
 
         if (_game.Stats.IsCompleted)
         {
